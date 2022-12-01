@@ -20,6 +20,7 @@ class Classification():
         self.model = model
 
     def __create_classification_file(self, pred_csv):
+        print(pred_csv)
         with open(pred_csv, 'w+') as prediction:
             prediction.write("ID,PREDICTED\n")
         prediction.close()

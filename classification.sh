@@ -7,10 +7,10 @@ csvDelimiter='c'
 features='A'
 grams=false
 documents=false
-model="$SCRIPTDIR/Senti4SD.model"
+model="Senti4SD.model"
 chunkSize=200
 jobsNumber=1
-outputFile="$SCRIPTDIR/predictions.csv"
+outputFile="predictions.csv"
 
 help(){
     echo "Usage: sh classification.sh -i input.csv [-d delimiter] [-F features] [-g] [-t] [-m model] [-c chunk_size] [-j jobs_number] [-o predictions.csv]"
@@ -86,6 +86,7 @@ python $SCRIPTDIR/python/csv_processing.py -i $inputFile -d $csvDelimiter -c tex
 
 IFS='.' read -ra FILENAMESPLIT <<< "$inputFile"
 jarInputFile="${FILENAMESPLIT[0]}_jar.csv"
+#中间生成的jar.csv
 
 if [ "$grams" = true ] ; then
     unigramsFile="$SCRIPTDIR/UnigramsList"
@@ -112,6 +113,7 @@ if [ "$grams" = true ] ; then
 
     java -jar $SCRIPTDIR/java/Senti4SD-fast.jar -F $features -i $jarInputFile -W $SCRIPTDIR/java/dsm.bin -oc $SCRIPTDIR/temp_features/extractedFeatures.csv -vd 600 -ul $unigramsFile -bl $bigramsFile
 
+#注意这里的情况
     if [ "$documents" = true ] ; then
         python $SCRIPTDIR/python/classification_task.py -i $SCRIPTDIR/temp_features/extractedFeatures.csv -i $inputFile -d $csvDelimiter -t -m $model -c $chunkSize -j $jobsNumber -o $outputFile
     else
@@ -133,11 +135,18 @@ else
     java -jar $SCRIPTDIR/java/Senti4SD-fast.jar -F $features -i $jarInputFile -W $SCRIPTDIR/java/dsm.bin -oc $SCRIPTDIR/temp_features/extractedFeatures.csv -vd 600
 
     if [ "$documents" = true ] ; then
-        python $SCRIPTDIR/python/classification_task.py -i $SCRIPTDIR/temp_features/extractedFeatures.csv -i $inputFile -d $csvDelimiter -t -m $model -c $chunkSize -j $jobsNumber -o $outputFile
+#        echo "$SCRIPTDIR/python/classification_task.py"
+#        echo "$SCRIPTDIR/temp_features/extractedFeatures.csv"
+#        echo $inputFile
+#        echo $csvDelimiter
+#        echo $model
+#        echo $chunkSize
+#        echo $jobsNumber
+#        echo $outputFile
+        python python/classification_task.py -i temp_features/extractedFeatures.csv -i $inputFile -d $csvDelimiter -t -m $model -c $chunkSize -j $jobsNumber -o $outputFile
     else
         python $SCRIPTDIR/python/classification_task.py -i $SCRIPTDIR/temp_features/extractedFeatures.csv -i $inputFile -d $csvDelimiter -m $model -c $chunkSize -j $jobsNumber -o $outputFile
     fi
-    
     rm -rf $SCRIPTDIR/temp_features
     rm $jarInputFile
 fi
